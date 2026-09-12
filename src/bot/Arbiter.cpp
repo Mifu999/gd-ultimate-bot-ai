@@ -324,8 +324,11 @@ Plan Arbiter::planWithSimulator(PlanRequest const& request) {
             next.begin() + std::min<std::size_t>(next.size(), beamWidth),
             next.end(),
             [](BeamNode const& a, BeamNode const& b) { return a.score > b.score; });
+        // erase(), not resize(): BeamNode holds a Level and has no default
+        // constructor, so resize() cannot value-construct the tail it would
+        // need. erase() only destroys, which is all we want here anyway.
         if (next.size() > static_cast<std::size_t>(beamWidth)) {
-            next.resize(beamWidth);
+            next.erase(next.begin() + beamWidth, next.end());
         }
         beam = std::move(next);
 

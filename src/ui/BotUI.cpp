@@ -50,14 +50,33 @@ CCMenuItemSpriteExtra* makeIconButton(
 
 // ---------------------------------------------------------------------------
 
-class GDUBAIPopup : public geode::Popup<> {
+// Geode v5 changed Popup: it is no longer templated, and Popup::init(w, h)
+// replaces initAnchored(). See docs.geode-sdk.org/tutorials/migrate-v5,
+// "Changes to Popup". The derived init() shadows the base overloads, which is
+// the pattern the migration guide itself shows.
+class GDUBAIPopup : public geode::Popup {
+public:
+    static GDUBAIPopup* create() {
+        auto* popup = new GDUBAIPopup();
+        if (popup->init()) {
+            popup->autorelease();
+            return popup;
+        }
+        delete popup;
+        return nullptr;
+    }
+
 protected:
     CCLabelBMFont* m_status = nullptr;
 
-    bool setup() override {
+    bool init() {
+        if (!Popup::init(380.f, 260.f)) return false;
+
         this->setTitle("GD Ultimate Bot AI");
 
-        auto const size = m_mainLayer->getContentSize();
+        // m_size is Popup's own protected size member - more reliable than
+        // reaching through m_mainLayer for the content size.
+        auto const size = m_size;
 
         m_status = CCLabelBMFont::create("", "chatFont.fnt");
         m_status->setScale(0.5f);
@@ -147,16 +166,6 @@ protected:
         m_status->setString(text.c_str());
     }
 
-public:
-    static GDUBAIPopup* create() {
-        auto* popup = new GDUBAIPopup();
-        if (popup && popup->initAnchored(380.f, 260.f)) {
-            popup->autorelease();
-            return popup;
-        }
-        CC_SAFE_DELETE(popup);
-        return nullptr;
-    }
 };
 
 // ---------------------------------------------------------------------------
@@ -165,10 +174,13 @@ struct GDUBAIPauseLayer : geode::Modify<GDUBAIPauseLayer, PauseLayer> {
     void customSetup() {
         PauseLayer::customSetup();
 
-        if (getChildByIDRecursive("gdubai-button")) return;
-
         auto* menu = resolvePauseMenu(this);
         if (!menu) return;
+
+        // getChildByID on the resolved menu, not getChildByIDRecursive on the
+        // layer: the recursive variant is a Geode cocos extension this build was
+        // not verified against, and the button can only live on this menu.
+        if (menu->getChildByID("gdubai-button")) return;
 
         menu->addChild(makeIconButton("gdubai-button", [](CCObject*) {
             if (auto* popup = GDUBAIPopup::create()) popup->show();

@@ -190,8 +190,11 @@ std::vector<std::uint8_t> Macro::toGdr2() const {
 
     // exportData() takes no arguments and returns Result<std::vector<uint8_t>>.
     // The overload that takes a path returns Result<> and writes the file.
+    // Test with isErr() rather than `!exported`. GDR's Result is not Geode's -
+    // the compiler prints it unqualified and it has no operator! - but both
+    // expose isOk/isErr/unwrap/unwrapErr, so the method form works either way.
     auto exported = replay.exportData();
-    if (!exported) {
+    if (exported.isErr()) {
         geode::log::error("GDUBAI: gdr export failed: {}", exported.unwrapErr());
         return {};
     }
