@@ -1,0 +1,104 @@
+{
+    "geode": "5.10.1",
+    "gd": {
+        "win": "2.2081",
+        "mac": "2.2081",
+        "android": "2.2081",
+        "ios": "2.2081"
+    },
+    "id": "mifu.gdubai",
+    "name": "GD Ultimate Bot AI",
+    "version": "v1.0.0",
+    "developers": ["Mifu"],
+    "description": "A bot and a learning AI that solve levels together in practice mode, checkpoint by checkpoint, and write the result out as a macro.",
+    "tags": ["gameplay", "offline", "utility", "cheat"],
+    "dependencies": {
+        "geode.node-ids": ">=v1.18.0"
+    },
+    "resources": {
+        "sprites": [
+            "resources/gdubai.png"
+        ]
+    },
+    "links": {
+        "source": "https://github.com/Mifuu/GDUltimateBotAI"
+    },
+    "settings": {
+        "director-title": {
+            "type": "title",
+            "name": "Practice director"
+        },
+        "commit-stride": {
+            "type": "int",
+            "name": "Commit stride (frames)",
+            "description": "How many frames must survive past an anchor before the stretch is locked in and the next checkpoint is planted. 240 frames = 1 second. Shorter means more checkpoints (each one is a full game-state snapshot, so they are not free); longer means a single hard moment forces re-solving more good ground.",
+            "default": 120,
+            "min": 15,
+            "max": 960,
+            "control": { "slider": true }
+        },
+        "plan-horizon": {
+            "type": "int",
+            "name": "Plan horizon (frames)",
+            "description": "How far ahead a solver is asked to look from an anchor.",
+            "default": 480,
+            "min": 60,
+            "max": 1920,
+            "control": { "slider": true }
+        },
+        "plan-horizon-max": {
+            "type": "int",
+            "name": "Maximum horizon (frames)",
+            "description": "Ceiling the horizon can grow to after repeated rollbacks. Every rollback grants the new anchor more lookahead, because being stuck usually means the answer was further back than the last plan could see.",
+            "default": 2880,
+            "min": 240,
+            "max": 9600
+        },
+        "retry-budget": {
+            "type": "int",
+            "name": "Attempts before rolling back",
+            "description": "How many deaths are spent at one anchor before the director drops that checkpoint and rewinds to the previous one.",
+            "default": 24,
+            "min": 2,
+            "max": 500
+        },
+        "anchor-seconds": {
+            "type": "float",
+            "name": "Time budget per anchor (seconds)",
+            "description": "Wall-clock ceiling for one anchor, so a pathological spot cannot hang the session forever.",
+            "default": 25.0,
+            "min": 2.0,
+            "max": 300.0
+        },
+        "max-checkpoints": {
+            "type": "int",
+            "name": "Maximum live checkpoints",
+            "description": "Each CheckpointObject stores a whole GJGameState plus saved object and trigger state. A dense level with thousands of them will hurt, so the director stops planting past this count.",
+            "default": 400,
+            "min": 16,
+            "max": 4000
+        },
+        "checkpoint-on-release-only": {
+            "type": "bool",
+            "name": "Only checkpoint on released frames",
+            "description": "PlayerCheckpoint does not save whether a button is held - it stores position, velocity, gamemode, slopes and collisions, but no input state. Anchoring only where every button is released sidesteps that entirely. Turn it off and the director re-applies the held buttons by hand after each respawn instead, which works but has more moving parts.",
+            "default": true
+        },
+        "validate-in-normal-mode": {
+            "type": "bool",
+            "name": "Validate the macro in normal mode",
+            "description": "When the practice solve reaches 100%, leave practice mode, clear the checkpoints and replay the whole macro from frame 0. Only a macro that survives this is marked CERTIFIED. Strongly recommended: practice-mode checkpoint restore is close to exact but not provably exact, and this pass is what catches the difference.",
+            "default": true
+        },
+        "display-title": {
+            "type": "title",
+            "name": "Display"
+        },
+        "show-hud": {
+            "type": "bool",
+            "name": "Show the in-game HUD",
+            "description": "Two lines in the top-left showing the phase, progress, checkpoint count and rollbacks.",
+            "default": true
+        }
+    }
+}
