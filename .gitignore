@@ -1,0 +1,39 @@
+# --- build ---
+build/
+build-*/
+bin/
+out/
+cmake-build-*/
+
+# --- CMake ---
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+CPM_modules/
+_deps/
+
+# --- Geode ---
+.geode/
+*.geode
+
+# --- éditeurs / OS ---
+.vscode/
+.vs/
+.idea/
+*.user
+.DS_Store
+Thumbs.db
+
+# --- artefacts locaux de dev (macros/mémoire testées en local) ---
+*.gdr2
+*.gdubai.json
+/memory/
+
+# --- logo (garder logo.png et resources/*.png, ignorer les brouillons) ---
+tools/*.png
+!tools/logokit.py
+!tools/make_logo.py
+proof.png
+sample.png
+corpus/
