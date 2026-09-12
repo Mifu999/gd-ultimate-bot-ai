@@ -73,7 +73,7 @@ struct Arbiter::Impl {
     // Climber state: the tape the learner mutates, shared with whatever the
     // simulator has already proven so the learner never re-searches it.
     std::vector<int> lockedTape;
-    SequenceParams sequenceParams;
+    neatgd::SequenceParams sequenceParams;
     std::mt19937 rng{std::random_device{}()};
     std::uint32_t stuck = 0;
 
@@ -374,10 +374,10 @@ Plan Arbiter::planWithLearner(PlanRequest const& request) {
     // other": the learner never re-searches ground the simulator proved.
     int const frontier = static_cast<int>(request.anchor.frame);
     int const horizon = frontier + static_cast<int>(request.horizon);
-    int const lookback = climberBacktrack(
+    int const lookback = neatgd::climberBacktrack(
         m_impl->sequenceParams, static_cast<int>(m_impl->stuck), frontier, m_impl->rng);
 
-    auto tape = buildCandidate(
+    auto tape = neatgd::buildCandidate(
         m_impl->lockedTape, frontier, lookback, horizon, m_impl->sequenceParams,
         m_impl->rng, static_cast<int>(m_impl->stuck));
 

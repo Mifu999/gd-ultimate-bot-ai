@@ -1,5 +1,9 @@
 #include "Macro.hpp"
 
+// Needed for GEODE_COMP_GD_VERSION and log::error. The build force-includes a
+// PCH that already pulls these in, but relying on that is fragile.
+#include <Geode/Geode.hpp>
+
 #include <gdr/gdr.hpp>
 
 #include <algorithm>
@@ -159,22 +163,39 @@ std::optional<Macro> Macro::fromJson(matjson::Value const& value) {
 }
 
 std::vector<std::uint8_t> Macro::toGdr2() const {
+    // Field names per the GDR2 spec (GDReplayFormat@gdr2, readme.md):
+    //   Replay { author, description, duration, gameVersion, framerate, seed,
+    //            coins, ldm, platformer, botInfo, levelInfo, inputs, deaths }
+    //   Level  { uint32_t id; std::string name; }
+    // Note it is `levelInfo`, not `level`.
     GdubaiReplay replay;
+    replay.author = "GDUltimateBotAI";
+    replay.description = certified ? "Certified in normal mode."
+                                   : "Built in practice mode; not validated.";
     replay.framerate = static_cast<double>(tps);
-    replay.level.name = levelName;
+    replay.gameVersion = GEODE_COMP_GD_VERSION;
+    replay.seed = seed;
+    replay.levelInfo.id = levelId;
+    replay.levelInfo.name = levelName;
+    replay.duration = tps ? static_cast<float>(lastFrame()) / static_cast<float>(tps) : 0.f;
 
     for (auto const& event : m_events) {
         replay.inputs.push_back(
             gdr::Input(event.frame, static_cast<int>(event.button), event.player2, event.down));
     }
 
-    // Pathfinder ships a leading dummy input so players that require a frame-1
-    // entry do not choke on macros that start with a long hold. Match that.
-    if (replay.inputs.empty() || replay.inputs.front().frame > 1) {
-        replay.inputs.insert(replay.inputs.begin(), gdr::Input(1, 1, false, false));
-    }
+    // No synthetic leading input. The Pathfinder fork inserts a dummy release at
+    // frame 1, but the GDR2 spec only asks that the first frame be 0, and a
+    // phantom release can itself confuse a replayer.
 
-    return replay.exportData(false);
+    // exportData() takes no arguments and returns Result<std::vector<uint8_t>>.
+    // The overload that takes a path returns Result<> and writes the file.
+    auto exported = replay.exportData();
+    if (!exported) {
+        geode::log::error("GDUBAI: gdr export failed: {}", exported.unwrapErr());
+        return {};
+    }
+    return exported.unwrap();
 }
 
 }  // namespace gdubai

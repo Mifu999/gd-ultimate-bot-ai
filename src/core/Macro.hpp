@@ -23,7 +23,18 @@ class Macro {
 public:
     std::string levelKey;
     std::string levelName;
+    std::uint32_t levelId = 0;
     std::uint32_t tps = static_cast<std::uint32_t>(kTPS);
+
+    // GJBaseGameLayer::m_randomSeed at the moment the run started, truncated to
+    // 32 bits for GDR's `seed` field.
+    //
+    // This is the one lever that can make a macro reproduce on an RNG level:
+    // the seed is redrawn every attempt, so a replayer that restores it (xdBot
+    // and pekoBot both ship a seed modifier) can reproduce a run that would
+    // otherwise diverge. Recorded unconditionally; whether a given replayer
+    // honours it is out of our hands.
+    std::int32_t seed = 0;
     Source dominantSource = Source::Unknown;
     bool certified = false;   // replayed end-to-end in normal mode successfully
     double reachedPercent = 0.0;

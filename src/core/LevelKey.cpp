@@ -37,15 +37,19 @@ std::string sanitiseFileName(std::string const& input) {
 std::string levelKeyFor(GJGameLevel* level) {
     if (!level) return "none";
 
+    // GJLevelType is { Default=0, Main=1, Editor=2, Saved=3, SearchResult=4 }.
+    // Main is the 22 built-in levels; there is no "Local" member.
+    //
+    // Editor levels are deliberately keyed by content hash rather than by id,
+    // even when they have one: the local copy can be edited after upload, and a
+    // macro for the old layout must not be recalled for the new one.
     int const levelId = level->m_levelID.value();
-    if (levelId > 0) {
-        // Official levels reuse low ids; m_levelType disambiguates them.
+    if (levelId > 0 && level->m_levelType != GJLevelType::Editor) {
         char buffer[48];
-        if (level->m_levelType == GJLevelType::Local && levelId < 100) {
-            std::snprintf(buffer, sizeof(buffer), "official-%d", levelId);
-        } else {
-            std::snprintf(buffer, sizeof(buffer), "online-%d", levelId);
-        }
+        std::snprintf(
+            buffer, sizeof(buffer),
+            level->m_levelType == GJLevelType::Main ? "official-%d" : "online-%d",
+            levelId);
         return buffer;
     }
 

@@ -80,6 +80,14 @@ bool PracticeDirector::begin(PlayLayer* layer, PracticeConfig config, Arbiter* a
     m_macro = Macro{};
     m_macro.levelKey = key;
     m_macro.levelName = layer->m_level->m_levelName.c_str();
+    m_macro.levelId = static_cast<std::uint32_t>(std::max(0, layer->m_level->m_levelID.value()));
+
+    // Capture the attempt's random seed. On a level that uses Random / AdvRand /
+    // AdvFollow triggers this is what lets a replayer reproduce the run at all,
+    // because GD redraws the seed on every fresh attempt. Truncated to 32 bits
+    // to fit GDR's `seed` field; GD seeds a C rand() whose RAND_MAX is 32767, so
+    // the low word is the part that matters.
+    m_macro.seed = static_cast<std::int32_t>(layer->m_randomSeed & 0xffffffffull);
 
     // Remember what the player had so stop() can put it back.
     m_hadPracticeMode = layer->m_isPracticeMode;
@@ -171,7 +179,9 @@ AnchorState PracticeDirector::sampleState(PlayLayer* layer) const {
     state.yVelocity = player->m_yVelocity;
     state.gravityMod = player->m_gravityMod;
     state.frame = FrameClock::get().frame();
-    state.mini = player->m_isMini;
+    // PlayerObject has no m_isMini. The game's own test is m_vehicleSize < 1.f
+    // (see GJBaseGameLayer.cpp:563 in the reconstructed bindings).
+    state.mini = player->m_vehicleSize < 1.f;
     state.upsideDown = player->m_isUpsideDown;
     state.sideways = player->m_isSideways;
     state.onGround = player->m_isOnGround;
