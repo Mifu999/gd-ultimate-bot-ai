@@ -1,6 +1,7 @@
 #include "HUD.hpp"
 
 #include "../game/BotRuntime.hpp"
+#include "../game/OfflineSolver.hpp"
 
 using namespace geode::prelude;
 
